@@ -4,8 +4,18 @@ const {test, describe, beforeAll, beforeEach, afterAll, afterEach, expect} = req
 //Methods who open browser "Chrome"
 const {chromium} = require('playwright');     
 
-//Mein URL to "GamePlay"
-const host = 'http://localhost:3000/';
+//Mein URL redirect to "GamePlay" and buttons in CLI
+const host = 'http://localhost:3000';
+const registerButton = "//a[text()='Register']";
+const emailFieldRegister = "//input[@name='email']";
+const passwordFieldRegister = "//input[@name='password']";
+const confirmPasswordFieldRegister = "//input[@name='confirm-password']";
+const submitButton = "//input[@type='submit']";
+const logoutButton = "//a[text()='Logout']";
+const loginButton = "//a[text()='Login']";
+const emailLogin = "//input[@name='email']";
+const passwordLogin = "//input[@name='password']";
+const loginButtonForm = "//input[@type='submit']";
 
 //Variables we need in tests
 let browser;
@@ -55,23 +65,58 @@ describe("e2e tests", () =>{                     //describe method group all tes
         test("Register with valid data", async () =>{
             //Arrange
             await page.goto(host);                          //Open the page and
-            await page.click("//a[text()='Register']");     //click the button 
+            await page.click(registerButton);     //click the button 
             await page.waitForSelector("//form");           //and wait for form
 
             let random = Math.floor(Math.random() * 1000);     //generate a random email
             user.email = `test_${random}@abv.bg`;
 
             //Act
-            await page.fill("//input[@name='email']", user.email)           //fill the form and
-            await page.fill("//input[@name='password']", user.password)     //click the register button
-            await page.fill("//input[@name='confirm-password']", user.confirmPassword)
+            await page.fill(emailFieldRegister, user.email)           //fill the form and
+            await page.fill(passwordFieldRegister, user.password)     //click the register button
+            await page.fill(confirmPasswordFieldRegister, user.confirmPassword)
 
-            await page.click("//input[@type='submit']");
+            await page.click(submitButton);
 
             //Assert
-            await expect(page.locator("//a[text()='Logout']")).toBeVisible();  //click 
-            expect(page.url()).toBe(host)                                      //the button
+            await expect(page.locator(logoutButton)).toBeVisible();  //click 
+            expect(page.url()).toBe(host + '/')                                      //the button
                                                                               //logout and go main page
+        })
+
+        test("Register with empty fields", async () => {
+            //Arrange                                        //this test run reg.form without valid data
+            await page.goto(host);                           //and catch the dialog(error message)
+            await page.click(registerButton);
+            await page.waitForSelector("//form");
+
+            //Act
+            page.on('dialog', async dialog =>{
+                expect(dialog.massage()).toBe("No empty fields are allowed and confirm password has to match password!");
+                                                             //before the dialog form show up adding           
+                await dialog.accept();                       //lestener and click the button 
+            });
+
+            await page.click(registerButton);
+
+            //Assert
+            expect(page.url()).toBe(host + "/register")
+        })                                                                   
+        
+        test("Login with valid credentials", async () =>{
+            //Arrange
+            await page.goto(host);
+            await page.click(loginButton);
+            await page.waitForSelector("form");
+
+            //Act
+            await page.fill(emailLogin, user.email);
+            await page.fill(passwordLogin, user.password);
+            await page.click(loginButtonForm);
+
+            //Assert
+            await expect(page.locator(logoutButton)).toBeVisible();
+            expect(page.url()).toBe(host + "/");
         })
 
     });
