@@ -84,7 +84,7 @@ describe("e2e tests", () =>{                     //describe method group all tes
                                                                               //logout and go main page
         })
 
-        test("Register with empty fields", async () => {
+        test("Register with empty fields", async () =>{
             //Arrange                                        //this test run reg.form without valid data
             await page.goto(host);                           //and catch the dialog(error message)
             await page.click(registerButton);
@@ -119,26 +119,41 @@ describe("e2e tests", () =>{                     //describe method group all tes
             expect(page.url()).toBe(host + "/");
         })
 
+        test("Login with empty fields", async () =>{
+            //Arrange
+            await page.goto(host);
+            await page.click(loginButton);
+            await page.waitForSelector("form");
+
+            //Act
+            const dialogPromise = page.waitForEvent('dialog');
+
+            await page.click(loginButtonForm);
+
+            const dialog = await dialogPromise;
+
+            //Assert
+            expect(dialog.message()).toBe("Unable to log in!");
+            await dialog.accept();
+            expect(page.url()).toBe(host + "/login");
+        }) 
+        test(" Logout from the application", async () =>{
+            await page.goto(host);
+            await page.click(loginButton);
+            await page.waitForSelector("form");
+      
+            await page.fill(emailLogin, user.email);
+            await page.fill(passwordLogin, user.password);
+            await page.click(loginButtonForm);
+
+            //Act
+            await page.click(logoutButton);
+
+            //Assert
+            await expect(page.locator(loginButton)).toBeVisible();
+            expect(page.url()).toBe(host + '/');
+
+        })
+
     });
-
-    describe("Navigation Bar Tests", () => {
-        
-    });
-
-    describe("CRUD Operations Tests", () => {
-        
-    });
-
-    describe("Home Page Tests", () => {
-        
-    });
-
-   
-
-
-
 })
-
-
-
-
